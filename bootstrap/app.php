@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\ExceptionsHandler;
 use App\Http\Middleware\AttachAuthToken;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -21,6 +22,5 @@ return Application::configure(basePath: dirname(__DIR__))
                 AttachAuthToken::class
             ]);
     })
-    ->withExceptions(function (Exceptions $exceptions) {
-        Integration::handles($exceptions);
-    })->create();
+    ->withExceptions(new ExceptionsHandler())
+    ->create();
