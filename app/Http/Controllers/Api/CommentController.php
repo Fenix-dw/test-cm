@@ -7,29 +7,38 @@ use App\Data\Requests\CommentRequestData;
 use App\Http\Controllers\Controller;
 use App\Models\Comment;
 use App\Models\News;
-use App\Repositories\Interfaces\CommentContract;
+use App\Repositories\CommentRepository;
 use App\Services\CommentService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Pagination\LengthAwarePaginator;
+use Spatie\LaravelData\PaginatedDataCollection;
 
 final class CommentController extends Controller
 {
 
     public function __construct(
         protected CommentService $commentService,
-        protected CommentContract $commentRepository
+        protected CommentRepository $commentRepository,
     )
     {
     }
 
-    public function index(News $news): LengthAwarePaginator
+    public function index(News $news): PaginatedDataCollection
     {
-        return $this->commentRepository->paginateFilter($news);
+        $comments = $this->commentRepository
+            ->paginateFilter($news, request('per_page'));
+
+        return CommentData::collect($comments);
     }
 
     public function show(int $comment): CommentData
     {
-        return $this->commentRepository->find($comment);
+        $comment = $this->commentRepository->find($comment);
+
+        if(empty($comment)){
+            abort(404, 'Not found.');
+        }
+
+        return CommentData::from($comment);
     }
 
     public function store(News $news, CommentRequestData $requestData): CommentData

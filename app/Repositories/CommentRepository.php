@@ -4,17 +4,21 @@ namespace App\Repositories;
 
 use App\Data\CommentData;
 use App\Models\Comment;
-use App\Repositories\Interfaces\CommentContract;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Spatie\LaravelData\PaginatedDataCollection;
 use Spatie\QueryBuilder\QueryBuilder;
 
-class CommentRepository implements CommentContract
+class CommentRepository extends CoreRepository
 {
-    public function paginateFilter(Model $model): LengthAwarePaginator
+
+    protected function getModelClass(): string
     {
-        $comments = QueryBuilder::for(Comment::class)
+        return Comment::class;
+    }
+
+    public function paginateFilter(Model $model, int $perPage = null): LengthAwarePaginator
+    {
+        return QueryBuilder::for(Comment::class)
             ->whereMorphedTo('commentable', $model->getMorphClass())
             ->where('commentable_id', $model->id)
             ->with('user')
@@ -24,15 +28,13 @@ class CommentRepository implements CommentContract
                 'user.email',
                 'user.id',
             ])
-            ->paginate(request('per_page'));
-
-        return CommentData::collect($comments);
+            ->paginate($perPage);
     }
 
-    public function find(int $id): ?CommentData
+    public function find(int $id) : ?Comment
     {
-        return CommentData::from(
-            Comment::with('user')->find($id)
-        );
+        return $this->startConditions()
+            ->with('user')
+            ->find($id);
     }
 }

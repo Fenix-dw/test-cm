@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Comment;
+use App\Models\News;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -11,7 +12,7 @@ class CommentTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_can_index_a_comment()
+    public function test_can_index()
     {
         $comment = Comment::factory()->create();
 
@@ -28,7 +29,7 @@ class CommentTest extends TestCase
             ->assertSee($comment->text);
     }
 
-    public function test_can_read_a_comment()
+    public function test_can_read()
     {
         $comment = Comment::factory()->create();
 
@@ -38,7 +39,7 @@ class CommentTest extends TestCase
             ->assertSeeText($comment->text);
     }
 
-    public function test_can_update_a_comment()
+    public function test_can_update()
     {
         $comment = Comment::factory()->create();
 
@@ -53,7 +54,23 @@ class CommentTest extends TestCase
         $this->assertDatabaseHas('comments', $updatedData);
     }
 
-    public function test_can_delete_a_comment()
+    public function test_can_create()
+    {
+        $user = User::factory()->create();
+        $news = News::factory()->create();
+
+        $data = [
+            'text' => 'Create comment',
+        ];
+
+        $this->actingAs($user)
+            ->postJson("/api/news/{$news->id}/comments", $data)
+            ->assertStatus(201);
+
+        $this->assertDatabaseHas('comments', $data);
+    }
+
+    public function test_can_delete()
     {
         $comment = Comment::factory()->create();
 
@@ -64,7 +81,7 @@ class CommentTest extends TestCase
         $this->assertDatabaseMissing('comments', ['id' => $comment->id]);
     }
 
-    public function test_error_update_a_comment()
+    public function test_error_update()
     {
         $user = User::factory()->create();
         $comment = Comment::factory()->create();
@@ -80,7 +97,7 @@ class CommentTest extends TestCase
 
     }
 
-    public function test_error_delete_a_comment()
+    public function test_error_delete()
     {
         $user = User::factory()->create();
         $comment = Comment::factory()->create();
